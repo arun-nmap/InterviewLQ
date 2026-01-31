@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+pdfplumber
+python-docx
+fpdf
+numpy
+openai-whisper
+soundfile
+opencv-python
+mediapipe
+duckduckgo-search
