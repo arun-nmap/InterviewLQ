@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>InterviewIQ – AI Interview Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.ico">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * { box-sizing: border-box; font-family: Inter, Arial; }
+    body { margin: 0; background:#f5f7fb; color:#1f2937; }
+
+    header {
+      padding:14px 28px; background:white; border-bottom:1px solid #e5e7eb;
+      display:flex; justify-content:space-between;
+    }
+    .brand { font-size:20px; font-weight:700; }
+    .brand span { color:#6366f1; }
+
+    .layout {
+      display:grid;
+      grid-template-columns:70px 1.7fr 1fr;
+      height:calc(100vh - 60px);
+    }
+
+    .sidebar {
+      background:white; border-right:1px solid #e5e7eb;
+      display:flex; flex-direction:column; align-items:center; padding-top:20px;
+    }
+    .icon {
+      width:42px; height:42px; border-radius:12px;
+      background:#f3f4f6; display:flex; align-items:center; justify-content:center;
+      margin-bottom:16px;
+    }
+    .icon.active { background:#6366f1; color:white; }
+
+    .center { padding:24px; }
+
+    .video-card {
+      position:relative; background:white; border-radius:18px;
+      height:360px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.1);
+    }
+    video { width:100%; height:100%; object-fit:cover; background:black; }
+
+    .controls {
+      position:absolute; bottom:14px; left:14px;
+      display:flex; gap:10px; align-items:center;
+    }
+    .rec { color:red; font-weight:600; }
+
+    .waveform {
+      position:absolute; bottom:14px; right:14px;
+      display:none; gap:4px;
+    }
+    .waveform span {
+      width:4px; height:18px; background:#22c55e;
+      animation:wave 1s infinite ease-in-out;
+    }
+    .waveform span:nth-child(2){animation-delay:.1s}
+    .waveform span:nth-child(3){animation-delay:.2s}
+    .waveform span:nth-child(4){animation-delay:.3s}
+    .waveform span:nth-child(5){animation-delay:.4s}
+    @keyframes wave { 0%,100%{height:6px} 50%{height:22px} }
+
+    .tabs { margin-top:14px; }
+    .tab { border:none; background:none; font-weight:600; opacity:.5; margin-right:20px; }
+    .tab.active { opacity:1; }
+
+    .transcript {
+      margin-top:10px; background:#0f172a; color:#e5e7eb;
+      padding:12px; border-radius:12px; height:120px;
+      overflow-y:auto; font-size:.85rem; white-space:pre-wrap;
+    }
+
+    .metrics { display:flex; gap:14px; margin-top:18px; }
+    .metric {
+      background:white; padding:14px; border-radius:14px; flex:1;
+      box-shadow:0 6px 20px rgba(0,0,0,.08);
+    }
+
+    .right {
+      background:#f9fafb; padding:20px; border-left:1px solid #e5e7eb;
+      overflow-y:auto;
+    }
+    .card {
+      background:white; padding:14px; border-radius:14px; margin-bottom:14px;
+    }
+
+    button {
+      width:100%; padding:10px; border:none; border-radius:10px;
+      margin-top:8px; font-weight:600; cursor:pointer;
+    }
+    .primary { background:#6366f1; color:white; }
+    .start { background:#22c55e; }
+    .danger { background:#ef4444; color:white; }
+    .secondary { background:#e5e7eb; }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">Interview<span>IQ</span></div>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="icon active">🎥</div>
+    <div class="icon">📊</div>
+    <div class="icon">📄</div>
+  </aside>
+
+  <main class="center">
+
+    <div class="video-card">
+      <video id="camera" autoplay muted></video>
+      <div class="controls">
+        <span class="rec">● Recording</span>
+        <button onclick="stopInterview()">⏹</button>
+      </div>
+      <div class="waveform" id="waveform">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active">Transcript</button>
+    </div>
+
+    <div id="transcript" class="transcript">Waiting for speech...</div>
+
+    <div class="metrics">
+      <div class="metric">
+        <h4>Confidence</h4>
+        <div id="confidence">0%</div>
+        <div style="height:6px;background:#e5e7eb;border-radius:6px;">
+          <div id="confidenceBar" style="height:100%;width:0%;background:#22c55e;"></div>
+        </div>
+      </div>
+      <div class="metric">
+        <h4>Emotion</h4>
+        <div id="emotion">—</div>
+      </div>
+      <div class="metric">
+        <h4>Difficulty</h4>
+        <div id="difficulty">—</div>
+      </div>
+    </div>
+
+  </main>
+
+  <aside class="right">
+    <div class="card">
+      <h3>Question</h3>
+      <p id="question">Upload resume and start interview</p>
+    </div>
+
+    <div class="card">
+      <h3>AI Radar Score</h3>
+      <canvas id="radarChart"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Emotion Timeline</h3>
+      <canvas id="emotionChart" height="140"></canvas>
+    </div>
+
+    <input type="file" id="resume" accept=".pdf,.docx">
+    <button class="primary" onclick="uploadResume()">Upload Resume</button>
+    <button class="primary start" onclick="startInterview()">Start Interview</button>
+    <button class="danger" onclick="stopInterview()">Stop Interview</button>
+    <button class="secondary" onclick="downloadReport()">Download Report</button>
+
+    <p id="tip"></p>
+  </aside>
+
+</div>
+
+<script src="js/realtime.js"></script>
+<script src="js/mic.js"></script>
+<script src="js/camera.js"></script>
+
+</body>
+</html>
