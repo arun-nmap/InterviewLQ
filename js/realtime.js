@@ -1,6 +1,10 @@
 let ws = null;
 let resumeUploaded = false;
 
+// 🔥 BACKEND URL (CHANGE ONLY IF YOUR URL IS DIFFERENT)
+const BACKEND_HTTP = "https://interviewlq.onrender.com";
+const BACKEND_WS   = "wss://interviewlq.onrender.com";
+
 /* ========= RADAR ========= */
 let radarChart;
 let radarScores = {
@@ -72,7 +76,7 @@ function uploadResume() {
   const fd = new FormData();
   fd.append("resume", f);
 
-  fetch("http://localhost:8000/upload_resume", {
+  fetch(`${BACKEND_HTTP}/upload_resume`, {
     method: "POST",
     body: fd
   }).then(() => {
@@ -86,7 +90,7 @@ function startInterview() {
   if (!resumeUploaded) return alert("Upload resume first");
 
   startCamera();
-  ws = new WebSocket("ws://localhost:8000/ws/interview");
+  ws = new WebSocket(`${BACKEND_WS}/ws/interview`);
 
   ws.onopen = () => {
     startMic(ws);
@@ -116,17 +120,15 @@ function startInterview() {
   };
 }
 
-/* ========= STOP (FIXED) ========= */
+/* ========= STOP ========= */
 function stopInterview(user = true) {
   if (!ws) return;
 
   if (user) {
-    // 1️⃣ Send stop request ONLY
     ws.send(JSON.stringify({ type: "stop" }));
-    return; // ❗ DO NOT close yet
+    return;
   }
 
-  // 2️⃣ Backend confirmed → cleanup
   ws.close();
   ws = null;
 
@@ -138,7 +140,7 @@ function stopInterview(user = true) {
 
 /* ========= REPORT ========= */
 function downloadReport() {
-  window.open("http://localhost:8000/report", "_blank");
+  window.open(`${BACKEND_HTTP}/report`, "_blank");
 }
 
 /* ========= LOAD ========= */
